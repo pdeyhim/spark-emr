@@ -37,7 +37,9 @@ private[spark] class ExecutorSource(val executor: Executor, executorId: String) 
 
   val metricRegistry = new MetricRegistry()
   // TODO: It would be nice to pass the application name here
-  val sourceName = "executor.%s".format(executorId)
+  //val sourceName = "executor.%s".format(executorId)
+  //Changing the sourceName to gather all executors metric via Cloudwatch
+  val sourceName = "executors"
 
   // Gauge for executor thread pool's actively executing task counts
   metricRegistry.register(MetricRegistry.name("threadpool", "activeTasks"), new Gauge[Int] {
@@ -59,7 +61,19 @@ private[spark] class ExecutorSource(val executor: Executor, executorId: String) 
   metricRegistry.register(MetricRegistry.name("threadpool", "maxPool_size"), new Gauge[Int] {
     override def getValue: Int = executor.threadPool.getMaximumPoolSize()
   })
+  
+  metricRegistry.register(MetricRegistry.name("mem", "heapusedratio"), new Gauge[Double] {
+    override def getValue: Double = executor.memInfo.getHeapMemoryUsage().getUsed().toDouble/executor.memInfo.getHeapMemoryUsage().getMax().toDouble
+  })
 
+   // metricRegistry.register(MetricRegistry.name("mem", "heapused"), new Gauge[Long] {
+   // override def getValue: Long = executor.memInfo.getUsed()
+  //})
+  
+   //  metricRegistry.register(MetricRegistry.name("mem", "heapmax"), new Gauge[Long] {
+   // override def getValue: Long = executor.memInfo.getMax()
+  //})
+  
   // Gauge for file system stats of this executor
   for (scheme <- Array("hdfs", "file")) {
     registerFileSystemStat(scheme, "read_bytes", _.getBytesRead(), 0L)

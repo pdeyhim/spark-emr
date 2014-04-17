@@ -123,6 +123,7 @@ private[spark] class Executor(
 
   // Start worker thread pool
   val threadPool = Utils.newDaemonCachedThreadPool("Executor task launch worker")
+  def memInfo = ManagementFactory.getMemoryMXBean()
 
   // Maintains the list of running tasks.
   private val runningTasks = new ConcurrentHashMap[Long, TaskRunner]

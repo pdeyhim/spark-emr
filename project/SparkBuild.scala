@@ -140,14 +140,17 @@ object SparkBuild extends Build {
   lazy val externalFlume = Project("external-flume", file("external/flume"), settings = flumeSettings)
     .dependsOn(streaming % "compile->compile;test->test")
 
+  lazy val externalAmazonKinesis= Project("external-amazonkinesis", file("external/AmazonKinesis"), settings = kinesisSettings)
+    .dependsOn(streaming % "compile->compile;test->test")
+
   lazy val externalZeromq = Project("external-zeromq", file("external/zeromq"), settings = zeromqSettings)
     .dependsOn(streaming % "compile->compile;test->test")
 
   lazy val externalMqtt = Project("external-mqtt", file("external/mqtt"), settings = mqttSettings)
     .dependsOn(streaming % "compile->compile;test->test")
 
-  lazy val allExternal = Seq[ClasspathDependency](externalTwitter, externalKafka, externalFlume, externalZeromq, externalMqtt)
-  lazy val allExternalRefs = Seq[ProjectReference](externalTwitter, externalKafka, externalFlume, externalZeromq, externalMqtt)
+  lazy val allExternal = Seq[ClasspathDependency](externalAmazonKinesis,externalTwitter, externalKafka, externalFlume, externalZeromq, externalMqtt)
+  lazy val allExternalRefs = Seq[ProjectReference](externalAmazonKinesis,externalTwitter, externalKafka, externalFlume, externalZeromq, externalMqtt)
 
   lazy val examples = Project("examples", file("examples"), settings = examplesSettings)
     .dependsOn(core, mllib, graphx, bagel, streaming, hive) dependsOn(allExternal: _*)
@@ -344,7 +347,8 @@ object SparkBuild extends Build {
         "com.twitter"                % "chill-java"       % chillVersion excludeAll(excludeAsm),
         "org.tachyonproject"         % "tachyon"          % "0.4.1-thrift" excludeAll(excludeHadoop, excludeCurator, excludeEclipseJetty, excludePowermock),
         "com.clearspring.analytics"  % "stream"           % "2.5.1",
-        "org.spark-project"          % "pyrolite"         % "2.0"
+        "org.spark-project"          % "pyrolite"         % "2.0",
+        "com.amazonaws" 	     % "aws-java-sdk"     % "1.7.3"
       ),
     libraryDependencies ++= maybeAvro
   )
@@ -538,6 +542,22 @@ object SparkBuild extends Build {
     )
   )
 
+  def kinesisSettings() = sharedSettings ++ Seq(
+    name := "spark-streaming-kinesis",
+    libraryDependencies ++= Seq(
+    "com.amazonaws" % "amazon-kinesis-client" % "1.0.0",
+    "com.amazonaws" % "aws-java-sdk" % "1.7.3"
+    )
+  )
+
+   def flumeSettings() = sharedSettings ++ Seq(
+    name := "spark-streaming-flume",
+    previousArtifact := sparkPreviousArtifact("spark-streaming-flume"),
+    libraryDependencies ++= Seq(
+      "org.apache.flume" % "flume-ng-sdk" % "1.2.0" % "compile" excludeAll(excludeNetty)
+    )
+  )
+
   def kafkaSettings() = sharedSettings ++ Seq(
     name := "spark-streaming-kafka",
     previousArtifact := sparkPreviousArtifact("spark-streaming-kafka"),
@@ -550,12 +570,17 @@ object SparkBuild extends Build {
         excludeAll(excludeNetty, excludeSLF4J)
     )
   )
-
-  def flumeSettings() = sharedSettings ++ Seq(
-    name := "spark-streaming-flume",
-    previousArtifact := sparkPreviousArtifact("spark-streaming-flume"),
+  
+ def kafkanettings() = sharedSettings ++ Seq(
+    name := "spark-streaming-kafka",
+    previousArtifact := sparkPreviousArtifact("spark-streaming-kafka"),
     libraryDependencies ++= Seq(
-      "org.apache.flume" % "flume-ng-sdk" % "1.2.0" % "compile" excludeAll(excludeNetty)
+      "com.github.sgroschupf"    % "zkclient"   % "0.1"          excludeAll(excludeNetty),
+      "org.apache.kafka"        %% "kafka"      % "0.8.0"
+        exclude("com.sun.jdmk", "jmxtools")
+        exclude("com.sun.jmx", "jmxri")
+        exclude("net.sf.jopt-simple", "jopt-simple")
+        excludeAll(excludeNetty, excludeSLF4J)
     )
   )
 
