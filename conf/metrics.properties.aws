@@ -1,0 +1,7 @@
+# Enable Cloudwatch Sink
+*.sink.Cloudwatch.class=org.apache.spark.metrics.sink.CloudwatchSink
+# # Enable jvm source for instance master, worker, driver and executor
+master.source.jvm.class=org.apache.spark.metrics.source.JvmSource
+worker.source.jvm.class=org.apache.spark.metrics.source.JvmSource
+driver.source.jvm.class=org.apache.spark.metrics.source.JvmSource
+executor.source.jvm.class=org.apache.spark.metrics.source.JvmSource
